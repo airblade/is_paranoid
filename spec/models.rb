@@ -3,11 +3,18 @@ class Person < ActiveRecord::Base #:nodoc:
   has_many :androids, :foreign_key => :owner_id, :dependent => :destroy
 end
 
+class Mood < ActiveRecord::Base #:nodoc:
+  validates_uniqueness_of :name
+  belongs_to :android
+end
+
+
 class Android < ActiveRecord::Base #:nodoc:
   validates_uniqueness_of :name
   has_many :components, :dependent => :destroy
   has_one :sticker
   has_many :memories, :foreign_key => 'parent_id'
+  has_many :moods
 
   is_paranoid
 

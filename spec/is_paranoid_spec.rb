@@ -6,10 +6,13 @@ describe IsParanoid do
     Android.delete_all
     Person.delete_all
     Component.delete_all
+    Mood.delete_all
+    Memory.delete_all
 
     @luke = Person.create(:name => 'Luke Skywalker')
     @r2d2 = Android.create(:name => 'R2D2', :owner_id => @luke.id)
     @c3p0 = Android.create(:name => 'C3P0', :owner_id => @luke.id)
+    @c3p0.moods.create(:name => 'Smug')
 
     @r2d2.components.create(:name => 'Rotors')
 
@@ -188,6 +191,18 @@ describe IsParanoid do
       # because the default relationship works this way, i.e.
       sticker.android.should == nil
       sticker.android_with_destroyed.should == nil
+    end
+
+    it "should be able to access destroyed parents when not paranoid itself" do
+      # Mood is not paranoid.
+      mood = Mood.last
+      parent = mood.android
+      mood.android.destroy
+
+      # Reload so the model doesn't remember the parent.
+      mood.reload
+      mood.android.should == nil
+      mood.android_with_destroyed.should == parent
     end
   end
 

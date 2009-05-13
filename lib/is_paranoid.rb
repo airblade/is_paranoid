@@ -22,6 +22,32 @@ module IsParanoid
     # and self.find_with_destroyed defined in the module ClassMethods)
     default_scope :conditions => {destroyed_field => field_not_destroyed}
 
+    # Define a member_with_destroyed method on models which belong_to this one.
+    # We find the models which belong_to this one by iterating over the ones of
+    # which this one has many or has one, and then iterating over those to find
+    # which declare that they belong to this one.
+    #
+    # NOTE: is_paranoid declaration must follow assocation declarations.
+    [:has_many, :has_one].each do |macro|
+      self.reflect_on_all_associations(macro).each do |assoc|
+        if (a = assoc.klass.reflect_on_all_associations(:belongs_to).detect{ |a| a.class_name == self.class_name })
+          assoc.klass.send(
+            :include,
+            Module.new{                                                   # Example:
+              define_method "#{a.name}_with_destroyed" do |*args|         # def android_with_destroyed
+                a.klass.first_with_destroyed(                             #   Android.first_with_destroyed(
+                  :conditions => {                                        #     :conditions => {
+                    a.klass.primary_key =>                                #       :id =>
+                      self.send(a.primary_key_name)                       #         self.send(:android_id)
+                  }                                                       #     }
+                )                                                         #   )
+              end                                                         # end
+            }
+          )
+        end
+      end
+    end
+
     extend ClassMethods
     include InstanceMethods
   end
@@ -107,6 +133,7 @@ module IsParanoid
 
   module InstanceMethods
 
+=begin
     def method_missing name, *args
       # if we're trying for a _____with_destroyed method
       # and we can respond to the _____ method
@@ -135,6 +162,7 @@ module IsParanoid
         super(name, *args)
       end
     end
+=end
 
     # Mark the model deleted_at as now.
     def destroy_without_callbacks

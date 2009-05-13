@@ -42,4 +42,9 @@ ActiveRecord::Schema.define(:version => 20090317164830) do
     t.string   "name"
     t.boolean  "alive", :default => true
   end
+
+  create_table "moods", :force => true do |t|
+    t.string   "name"
+    t.integer  "android_id"
+  end
 end
